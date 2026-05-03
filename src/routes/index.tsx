@@ -123,45 +123,62 @@ function Index() {
         </section>
 
         {/* Toolbar */}
-        <div className="glass-card soft-shadow mb-6 flex flex-wrap items-center gap-2 rounded-2xl border p-2">
-          <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>הכל · 80</FilterChip>
-          <FilterChip active={filter === "todo"} onClick={() => setFilter("todo")} dot="var(--status-todo)">לביצוע · 52</FilterChip>
-          <FilterChip active={filter === "progress"} onClick={() => setFilter("progress")} dot="var(--status-progress)">בתהליך · 6</FilterChip>
-          <FilterChip active={filter === "review"} onClick={() => setFilter("review")} dot="var(--status-review)">בבדיקה · 2</FilterChip>
-          <FilterChip active={filter === "done"} onClick={() => setFilter("done")} dot="var(--status-done)">הושלם · 21</FilterChip>
-          <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)">חסום · 16</FilterChip>
+        <div className="glass-card soft-shadow mb-6 overflow-hidden rounded-2xl border">
+          {/* Row 1 — status filters */}
+          <div className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5">
+            <span className="ml-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              סינון לפי סטטוס
+            </span>
+            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={80}>הכל</FilterChip>
+            <FilterChip active={filter === "todo"} onClick={() => setFilter("todo")} dot="var(--status-todo)" count={52}>לביצוע</FilterChip>
+            <FilterChip active={filter === "progress"} onClick={() => setFilter("progress")} dot="var(--status-progress)" count={6}>בתהליך</FilterChip>
+            <FilterChip active={filter === "review"} onClick={() => setFilter("review")} dot="var(--status-review)" count={2}>בבדיקה</FilterChip>
+            <FilterChip active={filter === "done"} onClick={() => setFilter("done")} dot="var(--status-done)" count={21}>הושלם</FilterChip>
+            <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)" count={16}>חסום</FilterChip>
+          </div>
 
-          <div className="mr-auto flex items-center gap-1">
-            <button
-              onClick={toggleAll}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted"
-              title={allOpen ? "כווץ את כל תת-המשימות" : "פתח את כל תת-המשימות"}
-            >
-              {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
-              {allOpen ? "כווץ הכל" : "פתח הכל"}
-            </button>
-            <div className="mx-1 h-5 w-px bg-border" />
-            <SortMenu field={sortField} dir={sortDir} onChange={(f, d) => { setSortField(f); setSortDir(d); }} />
-            <AdvancedFilter value={advanced} onChange={setAdvanced} />
-            <div className="mx-1 h-5 w-px bg-border" />
-            <div className="flex rounded-lg bg-muted p-0.5">
-              {VIEWS.map((v) => {
-                const Icon = v.icon;
-                const active = view === v.id;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => setView(v.id)}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
-                      active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title={v.label}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span className="hidden lg:inline">{v.label}</span>
-                  </button>
-                );
-              })}
+          {/* Row 2 — actions */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
+            <div className="flex items-center gap-1">
+              <SortMenu field={sortField} dir={sortDir} onChange={(f, d) => { setSortField(f); setSortDir(d); }} />
+              <AdvancedFilter value={advanced} onChange={setAdvanced} />
+              <div className="mx-1 h-5 w-px bg-border" />
+              <button
+                onClick={toggleAll}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted"
+                title={allOpen ? "כווץ את כל תת-המשימות" : "פתח את כל תת-המשימות"}
+              >
+                {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
+                {allOpen ? "כווץ הכל" : "פתח הכל"}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="hidden text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline">
+                תצוגה
+              </span>
+              <div className="flex rounded-xl border bg-muted/60 p-1">
+                {VIEWS.map((v) => {
+                  const Icon = v.icon;
+                  const active = view === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => setView(v.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                        active
+                          ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+                          : "text-muted-foreground hover:bg-card/60 hover:text-foreground"
+                      }`}
+                      title={v.label}
+                      aria-pressed={active}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      <span className="hidden md:inline">{v.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
