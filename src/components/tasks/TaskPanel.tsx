@@ -154,3 +154,16 @@ function Field({ icon, label, children }: { icon: React.ReactNode; label: string
     </div>
   );
 }
+
+function CommentBox() {
+  const [value, setValue] = useState("");
+  return (
+    <AiTextArea
+      value={value}
+      onChange={setValue}
+      placeholder="הוסף הערה…"
+      aria-label="הוסף הערה"
+      className="min-h-24 w-full resize-none rounded-xl border bg-background p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+    />
+  );
+}
