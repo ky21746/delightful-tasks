@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Plus, ChevronDown, ChevronsDownUp, ChevronsUpDown, LayoutGrid, List, ArrowUpDown, Columns3, CalendarRange, Flame, Rows3 } from "lucide-react";
+import { Search, Plus, ChevronsDownUp, ChevronsUpDown, List, Columns3, CalendarRange, Flame, Rows3 } from "lucide-react";
 import { tasks as ALL_TASKS, stats, projects, type Task, type Status } from "@/data/tasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskPanel } from "@/components/tasks/TaskPanel";
@@ -8,7 +8,9 @@ import { KanbanView } from "@/components/tasks/views/KanbanView";
 import { TimelineView } from "@/components/tasks/views/TimelineView";
 import { CompactView } from "@/components/tasks/views/CompactView";
 import { PriorityView } from "@/components/tasks/views/PriorityView";
-import { statusConfig } from "@/lib/task-config";
+import { AdvancedFilter, EMPTY_FILTERS, countActive, type AdvancedFilters } from "@/components/tasks/AdvancedFilter";
+import { SortMenu } from "@/components/tasks/SortMenu";
+import { sortTasks, type SortField, type SortDir } from "@/lib/task-sort";
 
 type ViewMode = "list" | "kanban" | "timeline" | "compact" | "priority";
 const VIEWS: { id: ViewMode; label: string; icon: typeof List }[] = [
@@ -26,9 +28,13 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | Status>("all");
+  const [advanced, setAdvanced] = useState<AdvancedFilters>(EMPTY_FILTERS);
   const [openTask, setOpenTask] = useState<Task | null>(null);
   const [allOpen, setAllOpen] = useState(false);
   const [view, setView] = useState<ViewMode>("list");
+  const [sortField, setSortField] = useState<SortField>("due");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [taskList, setTaskList] = useState<Task[]>(ALL_TASKS);
   const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
 
   const toggleAll = () => {
@@ -37,13 +43,25 @@ function Index() {
     setExpandSignal({ value: next, nonce: Date.now() });
   };
 
+  const handleStatusChange = (id: string, status: Status) => {
+    setTaskList((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+  };
+
   const filtered = useMemo(() => {
-    return ALL_TASKS.filter((t) => {
+    const fromIso = advanced.from?.toISOString().slice(0, 10);
+    const toIso = advanced.to?.toISOString().slice(0, 10);
+    const list = taskList.filter((t) => {
       if (filter !== "all" && t.status !== filter) return false;
       if (query && !`${t.title} ${t.code}`.toLowerCase().includes(query.toLowerCase())) return false;
+      if (advanced.statuses.length && !advanced.statuses.includes(t.status)) return false;
+      if (advanced.priorities.length && !advanced.priorities.includes(t.priority)) return false;
+      if (advanced.projects.length && !advanced.projects.includes(t.project)) return false;
+      if (fromIso && t.dueDate < fromIso) return false;
+      if (toIso && t.dueDate > toIso) return false;
       return true;
     });
-  }, [query, filter]);
+    return sortTasks(list, sortField, sortDir);
+  }, [query, filter, advanced, taskList, sortField, sortDir]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Task[]>();
@@ -53,6 +71,8 @@ function Index() {
     }
     return [...map.entries()];
   }, [filtered]);
+
+  const advancedCount = countActive(advanced);
 
   return (
     <div className="min-h-screen">
@@ -121,13 +141,8 @@ function Index() {
               {allOpen ? "כווץ הכל" : "פתח הכל"}
             </button>
             <div className="mx-1 h-5 w-px bg-border" />
-            <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
-              <ArrowUpDown className="h-3.5 w-3.5" /> מיון
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
-              <SlidersHorizontal className="h-3.5 w-3.5" /> סינון
-            </button>
+            <SortMenu field={sortField} dir={sortDir} onChange={(f, d) => { setSortField(f); setSortDir(d); }} />
+            <AdvancedFilter value={advanced} onChange={setAdvanced} />
             <div className="mx-1 h-5 w-px bg-border" />
             <div className="flex rounded-lg bg-muted p-0.5">
               {VIEWS.map((v) => {
@@ -151,6 +166,21 @@ function Index() {
           </div>
         </div>
 
+        {/* Active filter summary */}
+        {(advancedCount > 0 || query) && (
+          <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>הצגה: <span className="font-semibold text-foreground">{filtered.length}</span> משימות</span>
+            {advancedCount > 0 && (
+              <button
+                onClick={() => setAdvanced(EMPTY_FILTERS)}
+                className="rounded-md bg-muted px-2 py-1 hover:bg-muted/70"
+              >
+                נקה {advancedCount} סינונים מתקדמים
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Views */}
         {view === "list" && (
           <div className="space-y-8">
@@ -173,7 +203,7 @@ function Index() {
             })}
           </div>
         )}
-        {view === "kanban" && <KanbanView tasks={filtered} onOpen={setOpenTask} />}
+        {view === "kanban" && <KanbanView tasks={filtered} onOpen={setOpenTask} onStatusChange={handleStatusChange} />}
         {view === "timeline" && <TimelineView tasks={filtered} onOpen={setOpenTask} />}
         {view === "priority" && <PriorityView tasks={filtered} onOpen={setOpenTask} />}
         {view === "compact" && <CompactView tasks={filtered} onOpen={setOpenTask} />}
