@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, MessageSquare, Paperclip, Plus, MoreHorizontal, Calendar } from "lucide-react";
 import type { Task } from "@/data/tasks";
 import { StatusPill } from "./StatusPill";
 import { priorityConfig } from "@/lib/task-config";
 
-export function TaskCard({ task, onOpen }: { task: Task; onOpen: (t: Task) => void }) {
+export function TaskCard({
+  task,
+  onOpen,
+  expandSignal,
+}: {
+  task: Task;
+  onOpen: (t: Task) => void;
+  expandSignal?: { value: boolean; nonce: number };
+}) {
   const [open, setOpen] = useState(task.subtasks.length > 0 && task.status === "progress");
+
+  useEffect(() => {
+    if (expandSignal) setOpen(expandSignal.value);
+  }, [expandSignal?.nonce]);
   const done = task.subtasks.filter((s) => s.status === "done").length;
   const total = task.subtasks.length;
   const pct = total ? (done / total) * 100 : 0;
@@ -108,8 +120,10 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (t: Task) => vo
                 </div>
               </button>
 
-              {open && (
-                <ul className="mt-2 space-y-1 border-r-2 border-dashed border-border pr-4">
+              <div
+                className={`grid transition-all duration-300 ease-out ${open ? "mt-2 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+              >
+                <ul className="overflow-hidden space-y-1 border-r-2 border-dashed border-border pr-4">
                   {task.subtasks.map((s) => (
                     <li
                       key={s.id}
@@ -133,7 +147,7 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (t: Task) => vo
                     </button>
                   </li>
                 </ul>
-              )}
+              </div>
             </div>
           )}
         </div>

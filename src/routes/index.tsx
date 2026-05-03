@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Plus, ChevronDown, LayoutGrid, List, ArrowUpDown } from "lucide-react";
+import { Search, SlidersHorizontal, Plus, ChevronDown, ChevronsDownUp, ChevronsUpDown, LayoutGrid, List, ArrowUpDown } from "lucide-react";
 import { tasks as ALL_TASKS, stats, projects, type Task, type Status } from "@/data/tasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskPanel } from "@/components/tasks/TaskPanel";
@@ -14,6 +14,14 @@ function Index() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [openTask, setOpenTask] = useState<Task | null>(null);
+  const [allOpen, setAllOpen] = useState(false);
+  const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
+
+  const toggleAll = () => {
+    const next = !allOpen;
+    setAllOpen(next);
+    setExpandSignal({ value: next, nonce: Date.now() });
+  };
 
   const filtered = useMemo(() => {
     return ALL_TASKS.filter((t) => {
@@ -90,6 +98,15 @@ function Index() {
           <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)">חסום · 16</FilterChip>
 
           <div className="mr-auto flex items-center gap-1">
+            <button
+              onClick={toggleAll}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted"
+              title={allOpen ? "כווץ את כל תת-המשימות" : "פתח את כל תת-המשימות"}
+            >
+              {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
+              {allOpen ? "כווץ הכל" : "פתח הכל"}
+            </button>
+            <div className="mx-1 h-5 w-px bg-border" />
             <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
               <ArrowUpDown className="h-3.5 w-3.5" /> מיון
               <ChevronDown className="h-3.5 w-3.5" />
@@ -122,7 +139,7 @@ function Index() {
                 </div>
                 <div className="space-y-3">
                   {list.map((t) => (
-                    <TaskCard key={t.id} task={t} onOpen={setOpenTask} />
+                    <TaskCard key={t.id} task={t} onOpen={setOpenTask} expandSignal={expandSignal} />
                   ))}
                 </div>
               </section>
