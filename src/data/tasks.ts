@@ -52,6 +52,7 @@ export const tasks: Task[] = [
     status: "progress",
     priority: "high",
     due: "29 אפר׳",
+    dueDate: "2026-04-29",
     updated: "לפני שעה",
     assignees: [
       { name: "יב", color: "oklch(0.65 0.18 280)" },
@@ -79,6 +80,7 @@ export const tasks: Task[] = [
     status: "review",
     priority: "med",
     due: "23 אפר׳",
+    dueDate: "2026-04-23",
     updated: "לפני 3 שעות",
     assignees: [{ name: "א", color: "oklch(0.7 0.12 200)" }],
     subtasks: [
@@ -97,6 +99,7 @@ export const tasks: Task[] = [
     status: "progress",
     priority: "high",
     due: "23 אפר׳",
+    dueDate: "2026-04-23",
     updated: "לפני יום",
     assignees: [{ name: "ר", color: "oklch(0.7 0.15 320)" }],
     subtasks: [
@@ -116,6 +119,7 @@ export const tasks: Task[] = [
     status: "progress",
     priority: "med",
     due: "23 אפר׳",
+    dueDate: "2026-04-23",
     updated: "לפני יום",
     assignees: [{ name: "מ", color: "oklch(0.65 0.14 150)" }],
     subtasks: [],
@@ -131,6 +135,7 @@ export const tasks: Task[] = [
     status: "todo",
     priority: "low",
     due: "23 אפר׳",
+    dueDate: "2026-04-23",
     updated: "לפני יומיים",
     assignees: [{ name: "ד", color: "oklch(0.68 0.13 250)" }],
     subtasks: [{ id: "sd1", title: "צבעים", status: "todo" }, { id: "sd2", title: "צללים", status: "todo" }],
@@ -146,6 +151,7 @@ export const tasks: Task[] = [
     status: "blocked",
     priority: "high",
     due: "16 אפר׳",
+    dueDate: "2026-04-16",
     updated: "לפני 5 ימים",
     assignees: [{ name: "יב", color: "oklch(0.65 0.18 280)" }],
     subtasks: [{ id: "so1", title: "סלייד פיננסי", status: "blocked" }],
@@ -161,6 +167,7 @@ export const tasks: Task[] = [
     status: "done",
     priority: "med",
     due: "19 אפר׳",
+    dueDate: "2026-04-19",
     updated: "אתמול",
     assignees: [{ name: "תמ", color: "oklch(0.7 0.14 38)" }],
     subtasks: [
