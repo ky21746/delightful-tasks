@@ -1,9 +1,17 @@
+import { useEffect } from "react";
 import { X, Calendar, User, Flag, Plus, MessageSquare, Paperclip, Trash2 } from "lucide-react";
 import type { Task } from "@/data/tasks";
 import { StatusPill } from "./StatusPill";
 import { priorityConfig, statusConfig } from "@/lib/task-config";
 
 export function TaskPanel({ task, onClose }: { task: Task | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!task) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [task, onClose]);
+
   if (!task) return null;
   const done = task.subtasks.filter((s) => s.status === "done").length;
   const total = task.subtasks.length;
@@ -11,8 +19,18 @@ export function TaskPanel({ task, onClose }: { task: Task | null; onClose: () =>
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l bg-card shadow-2xl animate-in slide-in-from-right">
+      <div
+        data-testid="task-panel-overlay"
+        className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+      <aside
+        data-testid="task-panel"
+        dir="rtl"
+        role="dialog"
+        aria-modal="true"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l bg-card shadow-2xl animate-in slide-in-from-right duration-300 ease-out"
+      >
         <header className="flex items-start justify-between gap-3 border-b p-5">
           <div className="min-w-0 flex-1">
             <div className="mb-1.5 flex items-center gap-2">
