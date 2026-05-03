@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Plus, ChevronsDownUp, ChevronsUpDown, List, Columns3, CalendarRange, Flame, Rows3 } from "lucide-react";
+import { Search, Plus, ChevronsDownUp, ChevronsUpDown, List, Columns3, CalendarRange, Flame, Rows3, X } from "lucide-react";
 import { tasks as ALL_TASKS, stats, projects, type Task, type Status } from "@/data/tasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskPanel } from "@/components/tasks/TaskPanel";
@@ -52,7 +52,11 @@ function Index() {
     const toIso = advanced.to?.toISOString().slice(0, 10);
     const list = taskList.filter((t) => {
       if (filter !== "all" && t.status !== filter) return false;
-      if (query && !`${t.title} ${t.code}`.toLowerCase().includes(query.toLowerCase())) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        const haystack = `${t.title} ${t.code} ${t.project} ${t.assignees.map((a) => a.name).join(" ")}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       if (advanced.statuses.length && !advanced.statuses.includes(t.status)) return false;
       if (advanced.priorities.length && !advanced.priorities.includes(t.priority)) return false;
       if (advanced.projects.length && !advanced.projects.includes(t.project)) return false;
