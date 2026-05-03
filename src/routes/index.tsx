@@ -137,57 +137,112 @@ function Index() {
         </section>
 
         {/* Toolbar */}
-        <div className="glass-card soft-shadow mb-6 overflow-hidden rounded-2xl border">
+        <div
+          className="glass-card soft-shadow mb-6 overflow-hidden rounded-2xl border"
+          role="toolbar"
+          aria-label="סרגל כלים לסינון, מיון ותצוגה של משימות"
+        >
+          {/* Row 0 — search */}
+          <div className="border-b bg-card/50 px-3 py-2.5">
+            <label htmlFor="task-search" className="sr-only">
+              חיפוש משימות לפי טקסט, קוד, פרויקט או שם משובץ
+            </label>
+            <div className="relative">
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                id="task-search"
+                ref={searchRef}
+                type="search"
+                role="searchbox"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && setQuery("")}
+                placeholder="חיפוש משימות, פרויקטים או שמות…  (לחץ / לפוקוס)"
+                aria-label="חיפוש משימות"
+                className="w-full rounded-xl border bg-background py-2 pr-9 pl-20 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <span className="pointer-events-none absolute left-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 text-[11px] text-muted-foreground sm:flex">
+                {query ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="pointer-events-auto inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-foreground hover:bg-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    aria-label="נקה חיפוש"
+                  >
+                    <X className="h-3 w-3" aria-hidden="true" /> נקה
+                  </button>
+                ) : (
+                  <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">/</kbd>
+                )}
+              </span>
+            </div>
+          </div>
+
           {/* Row 1 — status filters */}
-          <div className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5">
-            <span className="ml-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div
+            className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5"
+            role="group"
+            aria-label="סינון משימות לפי סטטוס"
+          >
+            <span className="ml-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" aria-hidden="true">
               סינון לפי סטטוס
             </span>
-            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={80}>הכל</FilterChip>
-            <FilterChip active={filter === "todo"} onClick={() => setFilter("todo")} dot="var(--status-todo)" count={52}>לביצוע</FilterChip>
-            <FilterChip active={filter === "progress"} onClick={() => setFilter("progress")} dot="var(--status-progress)" count={6}>בתהליך</FilterChip>
-            <FilterChip active={filter === "review"} onClick={() => setFilter("review")} dot="var(--status-review)" count={2}>בבדיקה</FilterChip>
-            <FilterChip active={filter === "done"} onClick={() => setFilter("done")} dot="var(--status-done)" count={21}>הושלם</FilterChip>
-            <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)" count={16}>חסום</FilterChip>
+            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={80} ariaLabel="הצג את כל המשימות (80)">הכל</FilterChip>
+            <FilterChip active={filter === "todo"} onClick={() => setFilter("todo")} dot="var(--status-todo)" count={52} ariaLabel="סנן משימות בסטטוס לביצוע (52)">לביצוע</FilterChip>
+            <FilterChip active={filter === "progress"} onClick={() => setFilter("progress")} dot="var(--status-progress)" count={6} ariaLabel="סנן משימות בתהליך (6)">בתהליך</FilterChip>
+            <FilterChip active={filter === "review"} onClick={() => setFilter("review")} dot="var(--status-review)" count={2} ariaLabel="סנן משימות בבדיקה (2)">בבדיקה</FilterChip>
+            <FilterChip active={filter === "done"} onClick={() => setFilter("done")} dot="var(--status-done)" count={21} ariaLabel="סנן משימות שהושלמו (21)">הושלם</FilterChip>
+            <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)" count={16} ariaLabel="סנן משימות חסומות (16)">חסום</FilterChip>
           </div>
 
           {/* Row 2 — actions */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1" role="group" aria-label="פעולות מיון וסינון מתקדם">
               <SortMenu field={sortField} dir={sortDir} onChange={(f, d) => { setSortField(f); setSortDir(d); }} />
               <AdvancedFilter value={advanced} onChange={setAdvanced} />
-              <div className="mx-1 h-5 w-px bg-border" />
+              <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
               <button
+                type="button"
                 onClick={toggleAll}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted"
-                title={allOpen ? "כווץ את כל תת-המשימות" : "פתח את כל תת-המשימות"}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={allOpen ? "כווץ את כל תת-המשימות בכל הכרטיסים" : "פתח את כל תת-המשימות בכל הכרטיסים"}
+                aria-pressed={allOpen}
               >
-                {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
+                {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" aria-hidden="true" /> : <ChevronsUpDown className="h-3.5 w-3.5" aria-hidden="true" />}
                 {allOpen ? "כווץ הכל" : "פתח הכל"}
               </button>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="hidden text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline">
+              <span className="hidden text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline" aria-hidden="true">
                 תצוגה
               </span>
-              <div className="flex rounded-xl border bg-muted/60 p-1">
+              <div
+                className="flex rounded-xl border bg-muted/60 p-1"
+                role="radiogroup"
+                aria-label="בחירת מצב תצוגה"
+              >
                 {VIEWS.map((v) => {
                   const Icon = v.icon;
                   const active = view === v.id;
                   return (
                     <button
                       key={v.id}
+                      type="button"
+                      role="radio"
                       onClick={() => setView(v.id)}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                         active
                           ? "bg-card text-foreground shadow-sm ring-1 ring-border"
                           : "text-muted-foreground hover:bg-card/60 hover:text-foreground"
                       }`}
-                      title={v.label}
-                      aria-pressed={active}
+                      aria-label={`תצוגת ${v.label}`}
+                      aria-checked={active}
                     >
-                      <Icon className="h-3.5 w-3.5" />
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                       <span className="hidden md:inline">{v.label}</span>
                     </button>
                   );
