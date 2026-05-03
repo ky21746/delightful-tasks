@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Plus, ChevronsDownUp, ChevronsUpDown, List, Columns3, CalendarRange, Flame, Rows3 } from "lucide-react";
+import { Search, Plus, ChevronsDownUp, ChevronsUpDown, List, Columns3, CalendarRange, Flame, Rows3, X } from "lucide-react";
 import { tasks as ALL_TASKS, stats, projects, type Task, type Status } from "@/data/tasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskPanel } from "@/components/tasks/TaskPanel";
@@ -37,6 +37,21 @@ function Index() {
   const [taskList, setTaskList] = useState<Task[]>(ALL_TASKS);
   const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
 
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const toggleAll = () => {
     const next = !allOpen;
     setAllOpen(next);
@@ -52,7 +67,11 @@ function Index() {
     const toIso = advanced.to?.toISOString().slice(0, 10);
     const list = taskList.filter((t) => {
       if (filter !== "all" && t.status !== filter) return false;
-      if (query && !`${t.title} ${t.code}`.toLowerCase().includes(query.toLowerCase())) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        const haystack = `${t.title} ${t.code} ${t.project} ${t.assignees.map((a) => a.name).join(" ")}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       if (advanced.statuses.length && !advanced.statuses.includes(t.status)) return false;
       if (advanced.priorities.length && !advanced.priorities.includes(t.priority)) return false;
       if (advanced.projects.length && !advanced.projects.includes(t.project)) return false;
@@ -76,24 +95,19 @@ function Index() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl" role="banner">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">משימות</h1>
             <p className="text-sm text-muted-foreground">העסק שלך, עובד חכם יותר ✨</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative hidden md:block">
-              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="חיפוש פרויקטים, משימות, לידים…"
-                className="w-72 rounded-xl border bg-card py-2 pr-9 pl-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <button className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">
-              <Plus className="h-4 w-4" /> משימה חדשה
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              aria-label="צור משימה חדשה"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> משימה חדשה
             </button>
           </div>
         </div>
@@ -123,57 +137,112 @@ function Index() {
         </section>
 
         {/* Toolbar */}
-        <div className="glass-card soft-shadow mb-6 overflow-hidden rounded-2xl border">
+        <div
+          className="glass-card soft-shadow mb-6 overflow-hidden rounded-2xl border"
+          role="toolbar"
+          aria-label="סרגל כלים לסינון, מיון ותצוגה של משימות"
+        >
+          {/* Row 0 — search */}
+          <div className="border-b bg-card/50 px-3 py-2.5">
+            <label htmlFor="task-search" className="sr-only">
+              חיפוש משימות לפי טקסט, קוד, פרויקט או שם משובץ
+            </label>
+            <div className="relative">
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                id="task-search"
+                ref={searchRef}
+                type="search"
+                role="searchbox"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && setQuery("")}
+                placeholder="חיפוש משימות, פרויקטים או שמות…  (לחץ / לפוקוס)"
+                aria-label="חיפוש משימות"
+                className="w-full rounded-xl border bg-background py-2 pr-9 pl-20 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <span className="pointer-events-none absolute left-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 text-[11px] text-muted-foreground sm:flex">
+                {query ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="pointer-events-auto inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-foreground hover:bg-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    aria-label="נקה חיפוש"
+                  >
+                    <X className="h-3 w-3" aria-hidden="true" /> נקה
+                  </button>
+                ) : (
+                  <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">/</kbd>
+                )}
+              </span>
+            </div>
+          </div>
+
           {/* Row 1 — status filters */}
-          <div className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5">
-            <span className="ml-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div
+            className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5"
+            role="group"
+            aria-label="סינון משימות לפי סטטוס"
+          >
+            <span className="ml-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" aria-hidden="true">
               סינון לפי סטטוס
             </span>
-            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={80}>הכל</FilterChip>
-            <FilterChip active={filter === "todo"} onClick={() => setFilter("todo")} dot="var(--status-todo)" count={52}>לביצוע</FilterChip>
-            <FilterChip active={filter === "progress"} onClick={() => setFilter("progress")} dot="var(--status-progress)" count={6}>בתהליך</FilterChip>
-            <FilterChip active={filter === "review"} onClick={() => setFilter("review")} dot="var(--status-review)" count={2}>בבדיקה</FilterChip>
-            <FilterChip active={filter === "done"} onClick={() => setFilter("done")} dot="var(--status-done)" count={21}>הושלם</FilterChip>
-            <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)" count={16}>חסום</FilterChip>
+            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} count={80} ariaLabel="הצג את כל המשימות (80)">הכל</FilterChip>
+            <FilterChip active={filter === "todo"} onClick={() => setFilter("todo")} dot="var(--status-todo)" count={52} ariaLabel="סנן משימות בסטטוס לביצוע (52)">לביצוע</FilterChip>
+            <FilterChip active={filter === "progress"} onClick={() => setFilter("progress")} dot="var(--status-progress)" count={6} ariaLabel="סנן משימות בתהליך (6)">בתהליך</FilterChip>
+            <FilterChip active={filter === "review"} onClick={() => setFilter("review")} dot="var(--status-review)" count={2} ariaLabel="סנן משימות בבדיקה (2)">בבדיקה</FilterChip>
+            <FilterChip active={filter === "done"} onClick={() => setFilter("done")} dot="var(--status-done)" count={21} ariaLabel="סנן משימות שהושלמו (21)">הושלם</FilterChip>
+            <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)" count={16} ariaLabel="סנן משימות חסומות (16)">חסום</FilterChip>
           </div>
 
           {/* Row 2 — actions */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1" role="group" aria-label="פעולות מיון וסינון מתקדם">
               <SortMenu field={sortField} dir={sortDir} onChange={(f, d) => { setSortField(f); setSortDir(d); }} />
               <AdvancedFilter value={advanced} onChange={setAdvanced} />
-              <div className="mx-1 h-5 w-px bg-border" />
+              <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
               <button
+                type="button"
                 onClick={toggleAll}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted"
-                title={allOpen ? "כווץ את כל תת-המשימות" : "פתח את כל תת-המשימות"}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={allOpen ? "כווץ את כל תת-המשימות בכל הכרטיסים" : "פתח את כל תת-המשימות בכל הכרטיסים"}
+                aria-pressed={allOpen}
               >
-                {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
+                {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" aria-hidden="true" /> : <ChevronsUpDown className="h-3.5 w-3.5" aria-hidden="true" />}
                 {allOpen ? "כווץ הכל" : "פתח הכל"}
               </button>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="hidden text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline">
+              <span className="hidden text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline" aria-hidden="true">
                 תצוגה
               </span>
-              <div className="flex rounded-xl border bg-muted/60 p-1">
+              <div
+                className="flex rounded-xl border bg-muted/60 p-1"
+                role="radiogroup"
+                aria-label="בחירת מצב תצוגה"
+              >
                 {VIEWS.map((v) => {
                   const Icon = v.icon;
                   const active = view === v.id;
                   return (
                     <button
                       key={v.id}
+                      type="button"
+                      role="radio"
                       onClick={() => setView(v.id)}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                         active
                           ? "bg-card text-foreground shadow-sm ring-1 ring-border"
                           : "text-muted-foreground hover:bg-card/60 hover:text-foreground"
                       }`}
-                      title={v.label}
-                      aria-pressed={active}
+                      aria-label={`תצוגת ${v.label}`}
+                      aria-checked={active}
                     >
-                      <Icon className="h-3.5 w-3.5" />
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                       <span className="hidden md:inline">{v.label}</span>
                     </button>
                   );
@@ -236,19 +305,23 @@ function FilterChip({
   onClick,
   dot,
   count,
+  ariaLabel,
   children,
 }: {
   active?: boolean;
   onClick?: () => void;
   dot?: string;
   count?: number;
+  ariaLabel?: string;
   children: React.ReactNode;
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
+      aria-label={ariaLabel}
+      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
         active
           ? "border-foreground bg-foreground text-background shadow-sm"
           : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
