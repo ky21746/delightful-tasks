@@ -12,7 +12,7 @@ export function TaskPanel({ task, onClose }: { task: Task | null; onClose: () =>
   return (
     <>
       <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
-      <aside className="fixed inset-y-0 left-0 z-50 flex w-full max-w-[480px] flex-col border-l bg-card shadow-2xl animate-in slide-in-from-left">
+      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l bg-card shadow-2xl animate-in slide-in-from-right">
         <header className="flex items-start justify-between gap-3 border-b p-5">
           <div className="min-w-0 flex-1">
             <div className="mb-1.5 flex items-center gap-2">
