@@ -14,6 +14,14 @@ function Index() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [openTask, setOpenTask] = useState<Task | null>(null);
+  const [allOpen, setAllOpen] = useState(false);
+  const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
+
+  const toggleAll = () => {
+    const next = !allOpen;
+    setAllOpen(next);
+    setExpandSignal({ value: next, nonce: Date.now() });
+  };
 
   const filtered = useMemo(() => {
     return ALL_TASKS.filter((t) => {
