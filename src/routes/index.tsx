@@ -1,10 +1,23 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Plus, ChevronDown, ChevronsDownUp, ChevronsUpDown, LayoutGrid, List, ArrowUpDown } from "lucide-react";
+import { Search, SlidersHorizontal, Plus, ChevronDown, ChevronsDownUp, ChevronsUpDown, LayoutGrid, List, ArrowUpDown, Columns3, CalendarRange, Flame, Rows3 } from "lucide-react";
 import { tasks as ALL_TASKS, stats, projects, type Task, type Status } from "@/data/tasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskPanel } from "@/components/tasks/TaskPanel";
+import { KanbanView } from "@/components/tasks/views/KanbanView";
+import { TimelineView } from "@/components/tasks/views/TimelineView";
+import { CompactView } from "@/components/tasks/views/CompactView";
+import { PriorityView } from "@/components/tasks/views/PriorityView";
 import { statusConfig } from "@/lib/task-config";
+
+type ViewMode = "list" | "kanban" | "timeline" | "compact" | "priority";
+const VIEWS: { id: ViewMode; label: string; icon: typeof List }[] = [
+  { id: "list", label: "רשימה", icon: List },
+  { id: "kanban", label: "קאנבן", icon: Columns3 },
+  { id: "timeline", label: "ציר זמן", icon: CalendarRange },
+  { id: "priority", label: "לפי עדיפות", icon: Flame },
+  { id: "compact", label: "טבלה", icon: Rows3 },
+];
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -15,6 +28,7 @@ function Index() {
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [openTask, setOpenTask] = useState<Task | null>(null);
   const [allOpen, setAllOpen] = useState(false);
+  const [view, setView] = useState<ViewMode>("list");
   const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
 
   const toggleAll = () => {
@@ -116,36 +130,53 @@ function Index() {
             </button>
             <div className="mx-1 h-5 w-px bg-border" />
             <div className="flex rounded-lg bg-muted p-0.5">
-              <button className="rounded-md bg-card p-1.5 shadow-sm">
-                <List className="h-3.5 w-3.5" />
-              </button>
-              <button className="p-1.5 text-muted-foreground">
-                <LayoutGrid className="h-3.5 w-3.5" />
-              </button>
+              {VIEWS.map((v) => {
+                const Icon = v.icon;
+                const active = view === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => setView(v.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                      active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title={v.label}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">{v.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Groups */}
-        <div className="space-y-8">
-          {grouped.map(([project, list]) => {
-            const proj = projects.find((p) => p.name === project);
-            return (
-              <section key={project}>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: proj?.color }} />
-                  <h2 className="text-base font-semibold">{project}</h2>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{list.length}</span>
-                </div>
-                <div className="space-y-3">
-                  {list.map((t) => (
-                    <TaskCard key={t.id} task={t} onOpen={setOpenTask} expandSignal={expandSignal} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+        {/* Views */}
+        {view === "list" && (
+          <div className="space-y-8">
+            {grouped.map(([project, list]) => {
+              const proj = projects.find((p) => p.name === project);
+              return (
+                <section key={project}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: proj?.color }} />
+                    <h2 className="text-base font-semibold">{project}</h2>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{list.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {list.map((t) => (
+                      <TaskCard key={t.id} task={t} onOpen={setOpenTask} expandSignal={expandSignal} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+        {view === "kanban" && <KanbanView tasks={filtered} onOpen={setOpenTask} />}
+        {view === "timeline" && <TimelineView tasks={filtered} onOpen={setOpenTask} />}
+        {view === "priority" && <PriorityView tasks={filtered} onOpen={setOpenTask} />}
+        {view === "compact" && <CompactView tasks={filtered} onOpen={setOpenTask} />}
       </main>
 
       <TaskPanel task={openTask} onClose={() => setOpenTask(null)} />
