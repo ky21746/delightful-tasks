@@ -55,6 +55,18 @@ export function TaskCard({
 
             <div className="flex shrink-0 items-center gap-2">
               <StatusPill status={task.status} />
+              {total > 0 && (
+                <button
+                  onClick={() => setOpen((v) => !v)}
+                  className="inline-flex items-center gap-1 rounded-lg border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground"
+                  aria-label={open ? "כווץ תת-משימות" : "פתח תת-משימות"}
+                  aria-expanded={open}
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "" : "-rotate-90"}`} />
+                  {open ? "כווץ" : "פתח"}
+                  <span className="tabular-nums">({done}/{total})</span>
+                </button>
+              )}
               <button className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
                 <MoreHorizontal className="h-4 w-4" />
               </button>
