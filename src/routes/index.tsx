@@ -235,24 +235,36 @@ function FilterChip({
   active,
   onClick,
   dot,
+  count,
   children,
 }: {
   active?: boolean;
   onClick?: () => void;
   dot?: string;
+  count?: number;
   children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${
+      aria-pressed={active}
+      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
         active
-          ? "bg-foreground text-background shadow-sm"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "border-foreground bg-foreground text-background shadow-sm"
+          : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
       }`}
     >
       {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: dot }} />}
-      {children}
+      <span>{children}</span>
+      {typeof count === "number" && (
+        <span
+          className={`tabular-nums rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+            active ? "bg-background/20 text-background" : "bg-muted text-foreground/70 group-hover:bg-background/60"
+          }`}
+        >
+          {count}
+        </span>
+      )}
     </button>
   );
 }
