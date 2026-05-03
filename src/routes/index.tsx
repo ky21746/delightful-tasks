@@ -38,6 +38,8 @@ export function Index() {
   const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
 
   const searchRef = useRef<HTMLInputElement>(null);
+  const statusGroupRef = useRef<HTMLDivElement>(null);
+  const viewGroupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -51,6 +53,27 @@ export function Index() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Roving arrow-key navigation inside a group of focusable buttons.
+  // In RTL: ArrowRight = previous (visually right is "back"), ArrowLeft = next.
+  const handleRovingKeys = (ref: React.RefObject<HTMLDivElement | null>) => (e: React.KeyboardEvent) => {
+    const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+    if (!keys.includes(e.key)) return;
+    const root = ref.current;
+    if (!root) return;
+    const items = Array.from(root.querySelectorAll<HTMLButtonElement>('button:not([disabled])'));
+    if (items.length === 0) return;
+    const current = document.activeElement as HTMLElement | null;
+    const idx = items.findIndex((i) => i === current);
+    if (idx === -1) return;
+    e.preventDefault();
+    let next = idx;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") next = (idx - 1 + items.length) % items.length;
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = (idx + 1) % items.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = items.length - 1;
+    items[next].focus();
+  };
 
   const toggleAll = () => {
     const next = !allOpen;
@@ -183,6 +206,8 @@ export function Index() {
 
           {/* Row 1 — status filters */}
           <div
+            ref={statusGroupRef}
+            onKeyDown={handleRovingKeys(statusGroupRef)}
             className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5"
             role="group"
             aria-label="סינון משימות לפי סטטוס"
@@ -221,6 +246,8 @@ export function Index() {
                 תצוגה
               </span>
               <div
+                ref={viewGroupRef}
+                onKeyDown={handleRovingKeys(viewGroupRef)}
                 className="flex rounded-xl border bg-muted/60 p-1"
                 role="radiogroup"
                 aria-label="בחירת מצב תצוגה"
