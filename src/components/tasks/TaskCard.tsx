@@ -49,7 +49,7 @@ export function TaskCard({
                 </span>
                 <span className="text-xs text-muted-foreground">{task.project}</span>
               </div>
-              <h3 className="text-[15px] font-semibold leading-snug text-foreground hover:text-primary">
+              <h3 className="text-lg font-semibold leading-snug text-foreground hover:text-primary md:text-xl">
                 {task.title}
               </h3>
             </button>
