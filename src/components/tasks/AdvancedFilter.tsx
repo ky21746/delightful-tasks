@@ -55,7 +55,7 @@ export function AdvancedFilter({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[340px] p-0" dir="rtl">
+      <PopoverContent align="end" className="w-[340px] p-0">
         <div className="flex items-center justify-between border-b px-4 py-2.5">
           <h4 className="text-sm font-semibold">סינון מתקדם</h4>
           <button

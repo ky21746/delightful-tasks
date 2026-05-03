@@ -22,7 +22,7 @@ export function SortMenu({
           {dir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" dir="rtl" className="w-52">
+      <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel>מיון לפי</DropdownMenuLabel>
         {SORT_OPTIONS.map((o) => (
           <DropdownMenuItem key={o.id} onClick={() => onChange(o.id, dir)} className="justify-between">
