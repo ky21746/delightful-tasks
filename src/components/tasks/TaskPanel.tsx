@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X, Calendar, User, Flag, Plus, MessageSquare, Paperclip, Trash2 } from "lucide-react";
 import type { Task } from "@/data/tasks";
 import { StatusPill } from "./StatusPill";
 import { priorityConfig, statusConfig } from "@/lib/task-config";
+import { AiTextArea } from "@/components/ai/AiTextArea";
 
 export function TaskPanel({ task, onClose }: { task: Task | null; onClose: () => void }) {
   useEffect(() => {
@@ -125,10 +126,8 @@ export function TaskPanel({ task, onClose }: { task: Task | null; onClose: () =>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               הערות ({task.comments})
             </h3>
-            <textarea
-              placeholder="הוסף הערה…"
-              className="min-h-24 w-full resize-none rounded-xl border bg-background p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
+            <CommentBox />
+
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1 text-muted-foreground">
                 <button className="rounded p-1.5 hover:bg-muted"><Paperclip className="h-4 w-4" /></button>
@@ -153,5 +152,18 @@ function Field({ icon, label, children }: { icon: React.ReactNode; label: string
       </div>
       <div>{children}</div>
     </div>
+  );
+}
+
+function CommentBox() {
+  const [value, setValue] = useState("");
+  return (
+    <AiTextArea
+      value={value}
+      onChange={setValue}
+      placeholder="הוסף הערה…"
+      aria-label="הוסף הערה"
+      className="min-h-24 w-full resize-none rounded-xl border bg-background p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+    />
   );
 }
