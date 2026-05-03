@@ -246,6 +246,8 @@ export function Index() {
                 תצוגה
               </span>
               <div
+                ref={viewGroupRef}
+                onKeyDown={handleRovingKeys(viewGroupRef)}
                 className="flex rounded-xl border bg-muted/60 p-1"
                 role="radiogroup"
                 aria-label="בחירת מצב תצוגה"
