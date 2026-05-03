@@ -79,7 +79,7 @@ export function AiRephraseButton({
         aria-busy={loading}
         title={tooShort ? "כתוב לפחות מספר תווים כדי לנסח מחדש" : "נסח מחדש בעזרת AI"}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-lg border bg-background/80 px-3 py-1.5 ms-2 my-1 text-xs font-medium text-foreground/80 shadow-sm backdrop-blur transition-all",
+          "inline-flex items-center gap-1.5 rounded-lg border bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground/80 shadow-sm backdrop-blur transition-all",
           "hover:border-primary/50 hover:bg-primary/10 hover:text-primary",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
           "disabled:cursor-not-allowed disabled:opacity-40",
