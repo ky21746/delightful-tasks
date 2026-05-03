@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { ChevronDown, MessageSquare, Paperclip, Plus, MoreHorizontal, Calendar } from "lucide-react";
 import type { Task } from "@/data/tasks";
 import { StatusPill } from "./StatusPill";
-import { priorityConfig } from "@/lib/task-config";
+import { priorityConfig, statusConfig } from "@/lib/task-config";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function TaskCard({
   task,
