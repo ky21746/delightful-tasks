@@ -18,6 +18,7 @@ export type Task = {
   status: Status;
   priority: Priority;
   due: string;
+  dueDate: string; // ISO yyyy-mm-dd
   updated: string;
   assignees: { name: string; color: string }[];
   description?: string;
