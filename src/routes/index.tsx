@@ -95,24 +95,19 @@ function Index() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl" role="banner">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">משימות</h1>
             <p className="text-sm text-muted-foreground">העסק שלך, עובד חכם יותר ✨</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative hidden md:block">
-              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="חיפוש פרויקטים, משימות, לידים…"
-                className="w-72 rounded-xl border bg-card py-2 pr-9 pl-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <button className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">
-              <Plus className="h-4 w-4" /> משימה חדשה
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              aria-label="צור משימה חדשה"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> משימה חדשה
             </button>
           </div>
         </div>
