@@ -4,6 +4,7 @@ import type { Task } from "@/data/tasks";
 import { StatusPill } from "./StatusPill";
 import { priorityConfig, statusConfig } from "@/lib/task-config";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AiTextArea } from "@/components/ai/AiTextArea";
 
 export function TaskCard({
   task,
@@ -171,17 +172,20 @@ export function TaskCard({
                   {task.subtasks.map((s) => (
                     <li
                       key={s.id}
-                      className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/50"
+                      className="rounded-lg px-2 py-2 hover:bg-muted/50"
                     >
-                      <button
-                        className="h-4 w-4 shrink-0 rounded border-2 border-border transition-colors hover:border-primary"
-                        style={s.status === "done" ? { backgroundColor: "var(--status-done)", borderColor: "var(--status-done)" } : {}}
-                      />
-                      <span className={`flex-1 text-sm ${s.status === "done" ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                        {s.title}
-                      </span>
-                      {s.due && <span className="text-[11px] text-muted-foreground">{s.due}</span>}
-                      <StatusPill status={s.status} size="xs" />
+                      <div className="flex items-center gap-3">
+                        <button
+                          className="h-4 w-4 shrink-0 rounded border-2 border-border transition-colors hover:border-primary"
+                          style={s.status === "done" ? { backgroundColor: "var(--status-done)", borderColor: "var(--status-done)" } : {}}
+                        />
+                        <span className={`flex-1 text-sm ${s.status === "done" ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                          {s.title}
+                        </span>
+                        {s.due && <span className="text-[11px] text-muted-foreground">{s.due}</span>}
+                        <StatusPill status={s.status} size="xs" />
+                      </div>
+                      <SubtaskNote subtaskId={s.id} />
                     </li>
                   ))}
                   <li>
@@ -192,10 +196,68 @@ export function TaskCard({
                   </li>
                 </ul>
               </div>
+
+              <TaskQuickComment taskId={task.id} />
             </div>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SubtaskNote({ subtaskId }: { subtaskId: string }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-1 mr-7 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary"
+        aria-label={`הוסף הערה לתת-משימה ${subtaskId}`}
+      >
+        <MessageSquare className="h-3 w-3" /> הוסף הערה
+      </button>
+    );
+  }
+  return (
+    <div className="mt-2 mr-7">
+      <AiTextArea
+        value={value}
+        onChange={setValue}
+        placeholder="הערה לתת-משימה…"
+        aria-label="הערה לתת-משימה"
+        className="min-h-16 w-full resize-none rounded-lg border bg-background p-2 text-xs placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+      />
+    </div>
+  );
+}
+
+function TaskQuickComment({ taskId }: { taskId: string }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
+        aria-label={`הוסף הערה למשימה ${taskId}`}
+      >
+        <MessageSquare className="h-3.5 w-3.5" /> הוסף הערה
+      </button>
+    );
+  }
+  return (
+    <div className="mt-3">
+      <AiTextArea
+        value={value}
+        onChange={setValue}
+        placeholder="הוסף הערה למשימה…"
+        aria-label="הוסף הערה למשימה"
+        className="min-h-20 w-full resize-none rounded-xl border bg-background p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+      />
     </div>
   );
 }
