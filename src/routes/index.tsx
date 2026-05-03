@@ -252,6 +252,18 @@ function Index() {
           </div>
         </div>
 
+        {/* Live region — announces filtered count to screen readers */}
+        <div
+          data-testid="results-live"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          נמצאו {filtered.length} משימות{query ? ` עבור החיפוש "${query}"` : ""}
+          {advancedCount > 0 ? ` עם ${advancedCount} סינונים מתקדמים` : ""}
+        </div>
+
         {/* Active filter summary */}
         {(advancedCount > 0 || query) && (
           <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
