@@ -139,7 +139,7 @@ function Index() {
                 </div>
                 <div className="space-y-3">
                   {list.map((t) => (
-                    <TaskCard key={t.id} task={t} onOpen={setOpenTask} />
+                    <TaskCard key={t.id} task={t} onOpen={setOpenTask} expandSignal={expandSignal} />
                   ))}
                 </div>
               </section>
