@@ -36,15 +36,15 @@ describe("Toolbar — Esc behavior", () => {
     expect(todoChip).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("Esc outside an input does not clear the search query", async () => {
+  it("Esc while focus is on a chip leaves the search query intact", async () => {
     const user = userEvent.setup();
     render(<Index />);
     const search = getSearch();
     await user.click(search);
     await user.keyboard("design");
     expect(search.value).toBe("design");
-    // Move focus away then press Esc
-    (document.body as HTMLElement).focus();
+    const todoChip = getChip(/סנן משימות בסטטוס לביצוע/);
+    todoChip.focus();
     await user.keyboard("{Escape}");
     expect(search.value).toBe("design");
   });
