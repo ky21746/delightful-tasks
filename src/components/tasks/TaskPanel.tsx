@@ -29,7 +29,7 @@ export function TaskPanel({ task, onClose }: { task: Task | null; onClose: () =>
         dir="rtl"
         role="dialog"
         aria-modal="true"
-        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l bg-card shadow-2xl animate-in slide-in-from-right duration-300 ease-out"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-s bg-card shadow-2xl animate-in slide-in-from-right duration-300 ease-out"
       >
         <header className="flex items-start justify-between gap-3 border-b p-5">
           <div className="min-w-0 flex-1">
