@@ -37,6 +37,21 @@ function Index() {
   const [taskList, setTaskList] = useState<Task[]>(ALL_TASKS);
   const [expandSignal, setExpandSignal] = useState<{ value: boolean; nonce: number }>({ value: false, nonce: 0 });
 
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const toggleAll = () => {
     const next = !allOpen;
     setAllOpen(next);
