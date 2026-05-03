@@ -57,16 +57,47 @@ export function TaskCard({
             <div className="flex shrink-0 items-center gap-2">
               <StatusPill status={task.status} />
               {total > 0 && (
-                <button
-                  onClick={() => setOpen((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-lg border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground"
-                  aria-label={open ? "כווץ תת-משימות" : "פתח תת-משימות"}
-                  aria-expanded={open}
-                >
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "" : "-rotate-90"}`} />
-                  {open ? "כווץ" : "פתח"}
-                  <span className="tabular-nums">({done}/{total})</span>
-                </button>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setOpen((v) => !v)}
+                        className="inline-flex items-center gap-1 rounded-lg border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground"
+                        aria-label={open ? "כווץ תת-משימות" : "פתח תת-משימות"}
+                        aria-expanded={open}
+                      >
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "" : "-rotate-90"}`} />
+                        {open ? "כווץ" : "פתח"}
+                        <span className="tabular-nums">({done}/{total})</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[260px] bg-popover p-3 text-popover-foreground shadow-lg">
+                      <div className="space-y-2 text-right">
+                        <div className="text-[12px] font-semibold">
+                          {done} מתוך {total} תת-משימות הושלמו ({Math.round(pct)}%)
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          לחץ כדי {open ? "לכווץ" : "לפתוח"} את רשימת תת-המשימות
+                        </div>
+                        <div className="space-y-1 border-t pt-2">
+                          {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((k) => {
+                            const count = task.subtasks.filter((s) => s.status === k).length;
+                            if (!count) return null;
+                            return (
+                              <div key={k} className="flex items-center justify-between gap-3 text-[11px]">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: statusConfig[k].color }} />
+                                  {statusConfig[k].label}
+                                </span>
+                                <span className="tabular-nums text-muted-foreground">{count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               <button className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
                 <MoreHorizontal className="h-4 w-4" />
