@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Plus, ChevronDown, LayoutGrid, List, ArrowUpDown } from "lucide-react";
+import { Search, SlidersHorizontal, Plus, ChevronDown, ChevronsDownUp, ChevronsUpDown, LayoutGrid, List, ArrowUpDown } from "lucide-react";
 import { tasks as ALL_TASKS, stats, projects, type Task, type Status } from "@/data/tasks";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskPanel } from "@/components/tasks/TaskPanel";
