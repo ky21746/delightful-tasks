@@ -98,8 +98,19 @@ function Index() {
           <FilterChip active={filter === "blocked"} onClick={() => setFilter("blocked")} dot="var(--status-blocked)">חסום · 16</FilterChip>
 
           <div className="mr-auto flex items-center gap-1">
+            <button
+              onClick={toggleAll}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted"
+              title={allOpen ? "כווץ את כל תת-המשימות" : "פתח את כל תת-המשימות"}
+            >
+              {allOpen ? <ChevronsDownUp className="h-3.5 w-3.5" /> : <ChevronsUpDown className="h-3.5 w-3.5" />}
+              {allOpen ? "כווץ הכל" : "פתח הכל"}
+            </button>
+            <div className="mx-1 h-5 w-px bg-border" />
             <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
               <ArrowUpDown className="h-3.5 w-3.5" /> מיון
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
