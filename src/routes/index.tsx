@@ -111,8 +111,6 @@ function Index() {
               <ArrowUpDown className="h-3.5 w-3.5" /> מיון
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
             <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
               <SlidersHorizontal className="h-3.5 w-3.5" /> סינון
             </button>
