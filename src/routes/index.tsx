@@ -305,19 +305,23 @@ function FilterChip({
   onClick,
   dot,
   count,
+  ariaLabel,
   children,
 }: {
   active?: boolean;
   onClick?: () => void;
   dot?: string;
   count?: number;
+  ariaLabel?: string;
   children: React.ReactNode;
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
+      aria-label={ariaLabel}
+      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
         active
           ? "border-foreground bg-foreground text-background shadow-sm"
           : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
