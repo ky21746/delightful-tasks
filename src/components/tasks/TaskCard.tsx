@@ -120,8 +120,10 @@ export function TaskCard({
                 </div>
               </button>
 
-              {open && (
-                <ul className="mt-2 space-y-1 border-r-2 border-dashed border-border pr-4">
+              <div
+                className={`grid transition-all duration-300 ease-out ${open ? "mt-2 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+              >
+                <ul className="overflow-hidden space-y-1 border-r-2 border-dashed border-border pr-4">
                   {task.subtasks.map((s) => (
                     <li
                       key={s.id}
@@ -145,7 +147,7 @@ export function TaskCard({
                     </button>
                   </li>
                 </ul>
-              )}
+              </div>
             </div>
           )}
         </div>
