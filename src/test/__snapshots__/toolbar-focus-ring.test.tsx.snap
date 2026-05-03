@@ -1,0 +1,55 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Toolbar — focus-visible ring classes > snapshot of toolbar focus-related class names is stable 1`] = `
+{
+  "chips": [
+    {
+      "label": "הצג את כל המשימות",
+      "ring": true,
+    },
+    {
+      "label": "סנן משימות בסטטוס לביצוע",
+      "ring": true,
+    },
+    {
+      "label": "סנן משימות בתהליך",
+      "ring": true,
+    },
+    {
+      "label": "סנן משימות בבדיקה",
+      "ring": true,
+    },
+    {
+      "label": "סנן משימות שהושלמו",
+      "ring": true,
+    },
+    {
+      "label": "סנן משימות חסומות",
+      "ring": true,
+    },
+  ],
+  "sort": true,
+  "views": [
+    {
+      "label": "תצוגת רשימה",
+      "ring": true,
+    },
+    {
+      "label": "תצוגת קאנבן",
+      "ring": true,
+    },
+    {
+      "label": "תצוגת ציר זמן",
+      "ring": true,
+    },
+    {
+      "label": "תצוגת לפי עדיפות",
+      "ring": true,
+    },
+    {
+      "label": "תצוגת טבלה",
+      "ring": true,
+    },
+  ],
+}
+`;

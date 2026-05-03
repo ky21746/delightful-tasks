@@ -16,7 +16,10 @@ export function SortMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted">
+        <button
+          aria-label={`מיון לפי ${current}`}
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
           <ArrowUpDown className="h-3.5 w-3.5" />
           מיון: <span className="font-medium">{current}</span>
           {dir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
