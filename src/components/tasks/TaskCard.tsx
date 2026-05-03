@@ -150,17 +150,17 @@ export function TaskCard({
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "" : "-rotate-90"}`} />
                   {done}/{total} תת-משימות
                 </span>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-border">
+                <div className="flex items-center gap-2.5">
+                  <div className="relative h-2.5 w-32 overflow-hidden rounded-full bg-border/70 ring-1 ring-inset ring-border shadow-inner">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_color-mix(in_oklab,var(--status-done)_60%,transparent)]"
                       style={{
                         width: `${pct}%`,
-                        backgroundColor: "var(--status-done)",
+                        background: "linear-gradient(90deg, var(--status-progress), var(--status-done))",
                       }}
                     />
                   </div>
-                  <span className="tabular-nums text-muted-foreground">{Math.round(pct)}%</span>
+                  <span className="tabular-nums text-sm font-semibold text-foreground">{Math.round(pct)}%</span>
                 </div>
               </button>
 
