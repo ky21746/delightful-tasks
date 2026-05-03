@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-function Index() {
+export function Index() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [advanced, setAdvanced] = useState<AdvancedFilters>(EMPTY_FILTERS);
