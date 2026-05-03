@@ -144,16 +144,20 @@ export function Index() {
             return (
               <button
                 key={s.label}
-                className="glass-card hover-lift soft-shadow group relative overflow-hidden rounded-2xl border p-4 text-right"
+                className="glass-card hover-lift soft-shadow group relative overflow-hidden rounded-2xl border-2 p-5 text-right transition-all hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <div
-                  className="absolute right-0 top-0 h-1 w-full"
+                  className="absolute right-0 top-0 h-1.5 w-full"
                   style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }}
                 />
-                <div className="text-3xl font-bold tabular-nums tracking-tight" style={{ color: accent }}>
+                <div
+                  className="absolute -left-6 -bottom-6 h-20 w-20 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-25"
+                  style={{ background: accent }}
+                />
+                <div className="text-4xl font-extrabold tabular-nums tracking-tight" style={{ color: accent }}>
                   {s.value}
                 </div>
-                <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
+                <div className="mt-1.5 text-sm font-medium text-foreground/80">{s.label}</div>
               </button>
             );
           })}
