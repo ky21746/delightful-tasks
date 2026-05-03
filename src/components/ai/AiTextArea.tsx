@@ -18,10 +18,10 @@ export const AiTextArea = React.forwardRef<HTMLTextAreaElement, AiTextAreaProps>
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className={cn("pb-10", className)}
+          className={cn("pb-11", className)}
           {...rest}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-start px-2">
+        <div className="pointer-events-none absolute bottom-2 left-2 flex">
           <div className="pointer-events-auto">
             <AiRephraseButton value={value} onChange={onChange} tone={tone} disabled={disabled} />
           </div>
