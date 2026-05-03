@@ -206,6 +206,8 @@ export function Index() {
 
           {/* Row 1 — status filters */}
           <div
+            ref={statusGroupRef}
+            onKeyDown={handleRovingKeys(statusGroupRef)}
             className="flex flex-wrap items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5"
             role="group"
             aria-label="סינון משימות לפי סטטוס"
