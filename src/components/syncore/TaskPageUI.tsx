@@ -979,11 +979,469 @@ export default function TaskPageUI() {
 
   const kpi = useMemo(() => {
     const now = Date.now();
-    const weekFromNow = now + 7 * 86400_000;
+    const weekFromNow = now + 7 * 86_400_000;
     return {
       total: parentTasks.length,
       todo: parentTasks.filter((t) => t.status === "todo").length,
       inProgress: parentTasks.filter((t) => t.status === "in-progress").length,
       done: parentTasks.filter((t) => t.status === "done").length,
       overdue: parentTasks.filter(
-        (t) => t.dueDate && t
+        (t) =>
+          t.dueDate &&
+          t.status !== "done" &&
+          new Date(t.dueDate).getTime() < now,
+      ).length,
+      dueThisWeek: parentTasks.filter((t) => {
+        if (!t.dueDate || t.status === "done") return false;
+        const d = new Date(t.dueDate).getTime();
+        return d >= now && d <= weekFromNow;
+      }).length,
+    };
+  }, [parentTasks]);
+
+  const filtered = useMemo(() => {
+    let list = parentTasks;
+    if (activeTab !== "all") list = list.filter((t) => t.status === activeTab);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          (t.assigneeName ?? "").toLowerCase().includes(q),
+      );
+    }
+    if (myOnly) list = list.filter((t) => t.assignedTo === CURRENT_USER_ID);
+    if (priorityFilter !== "all") list = list.filter((t) => t.priority === priorityFilter);
+    return list;
+  }, [parentTasks, activeTab, search, myOnly, priorityFilter]);
+
+  const projectGroups = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; tasks: Task[] }>();
+    for (const t of filtered) {
+      if (!map.has(t.projectId)) {
+        map.set(t.projectId, { id: t.projectId, name: t.projectName, tasks: [] });
+      }
+      map.get(t.projectId)!.tasks.push(t);
+    }
+    const groups = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "he"));
+
+    const sortFn = (a: Task, b: Task): number => {
+      if (sortBy === "dueDate") {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      }
+      if (sortBy === "priority") {
+        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+      }
+      if (sortBy === "updatedAt") {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+      return a.order - b.order;
+    };
+
+    for (const g of groups) {
+      const nonDone = g.tasks.filter((t) => t.status !== "done").sort(sortFn);
+      const done = g.tasks.filter((t) => t.status === "done").sort(sortFn);
+      g.tasks = [...nonDone, ...done];
+    }
+    return groups;
+  }, [filtered, sortBy]);
+
+  const counts = useMemo(
+    () => ({
+      all: parentTasks.length,
+      todo: parentTasks.filter((t) => t.status === "todo").length,
+      "in-progress": parentTasks.filter((t) => t.status === "in-progress").length,
+      done: parentTasks.filter((t) => t.status === "done").length,
+    }),
+    [parentTasks],
+  );
+
+  const selectedTask = selectedId ? tasks.find((t) => t.id === selectedId) ?? null : null;
+  const selectedSubtasks = useMemo(
+    () => (selectedId ? tasks.filter((t) => t.parentId === selectedId) : []),
+    [tasks, selectedId],
+  );
+  const selectedNotes = useMemo(
+    () => (selectedId ? notes.filter((n) => n.taskId === selectedId) : []),
+    [notes, selectedId],
+  );
+
+  // ── Mutations (in-memory only) ─────────────────────────────────────────────
+
+  const patchTask = useCallback((taskId: string, patch: Partial<Task>) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t,
+      ),
+    );
+  }, []);
+
+  const toggleStatus = useCallback((taskId: string) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              status: t.status === "done" ? "todo" : "done",
+              updatedAt: new Date().toISOString(),
+            }
+          : t,
+      ),
+    );
+  }, []);
+
+  const deleteTask = useCallback((taskId: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== taskId && t.parentId !== taskId));
+    setNotes((prev) => prev.filter((n) => n.taskId !== taskId));
+  }, []);
+
+  const addSubtask = useCallback(
+    (parentId: string, title: string) => {
+      const parent = tasks.find((t) => t.id === parentId);
+      if (!parent) return;
+      const newSub: Task = {
+        id: uid("sub"),
+        title,
+        status: "todo",
+        priority: "medium",
+        projectId: parent.projectId,
+        projectName: parent.projectName,
+        parentId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        order: tasks.filter((t) => t.parentId === parentId).length,
+      };
+      setTasks((prev) => [...prev, newSub]);
+    },
+    [tasks],
+  );
+
+  const addNote = useCallback(
+    (taskId: string, content: string, isPrivate: boolean) => {
+      const newNote: TaskNote = {
+        id: uid("note"),
+        taskId,
+        content,
+        isPrivate,
+        createdAt: new Date().toISOString(),
+        authorName: members.find((m) => m.userId === CURRENT_USER_ID)?.label ?? "אני",
+      };
+      setNotes((prev) => [newNote, ...prev]);
+    },
+    [members],
+  );
+
+  // ── Drag & drop handlers (native HTML5, frontend-only) ─────────────────────
+
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, taskId: string) => {
+    setDraggedId(taskId);
+    e.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>, targetId: string) => {
+      e.preventDefault();
+      if (!draggedId || draggedId === targetId) {
+        setDraggedId(null);
+        return;
+      }
+      setTasks((prev) => {
+        const dragged = prev.find((t) => t.id === draggedId);
+        const target = prev.find((t) => t.id === targetId);
+        if (!dragged || !target || dragged.projectId !== target.projectId) return prev;
+
+        const groupTasks = prev
+          .filter((t) => t.projectId === dragged.projectId && !t.parentId)
+          .sort((a, b) => a.order - b.order);
+        const others = prev.filter(
+          (t) => !(t.projectId === dragged.projectId && !t.parentId),
+        );
+
+        const fromIdx = groupTasks.findIndex((t) => t.id === draggedId);
+        const toIdx = groupTasks.findIndex((t) => t.id === targetId);
+        const reordered = [...groupTasks];
+        const [moved] = reordered.splice(fromIdx, 1);
+        reordered.splice(toIdx, 0, moved);
+        const renumbered = reordered.map((t, i) => ({ ...t, order: i }));
+        return [...others, ...renumbered];
+      });
+      setDraggedId(null);
+    },
+    [draggedId],
+  );
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const toggleProject = (projectId: string) => {
+    setCollapsedProjects((prev) => {
+      const next = new Set(prev);
+      next.has(projectId) ? next.delete(projectId) : next.add(projectId);
+      return next;
+    });
+  };
+
+  const toggleExpand = (taskId: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(taskId) ? next.delete(taskId) : next.add(taskId);
+      return next;
+    });
+  };
+
+  const getSubInfo = (taskId: string) => {
+    const subs = tasks.filter((t) => t.parentId === taskId);
+    return { count: subs.length, done: subs.filter((s) => s.status === "done").length };
+  };
+
+  const TAB_KEYS: Array<"all" | TaskStatus> = ["all", "todo", "in-progress", "done"];
+  const TAB_LABELS: Record<string, string> = {
+    all: T.tabAll,
+    todo: T.tabTodo,
+    "in-progress": T.tabInProgress,
+    done: T.tabCompleted,
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  return (
+    <div
+      dir="rtl"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+    >
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Page header */}
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+              {T.pageTitle}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              {T.pageSubtitle}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:shadow-xl hover:shadow-sky-500/30"
+          >
+            <Plus size={16} />
+            {T.newTask}
+          </button>
+        </header>
+
+        {/* KPI cards */}
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <KpiCard value={kpi.total}      label={T.kpiTotal}       accent="bg-slate-700"  icon={<ListTodo size={16} />} />
+          <KpiCard value={kpi.todo}       label={T.kpiTodo}        accent="bg-slate-400"  icon={<Clock size={16} />} />
+          <KpiCard value={kpi.inProgress} label={T.kpiInProgress}  accent="bg-sky-500"    icon={<Loader2 size={16} />} />
+          <KpiCard value={kpi.done}       label={T.kpiCompleted}   accent="bg-emerald-500" icon={<CheckCircle2 size={16} />} />
+          <KpiCard value={kpi.overdue}    label={T.kpiOverdue}     accent="bg-red-500"    icon={<Flag size={16} />} />
+          <KpiCard value={kpi.dueThisWeek} label={T.kpiDueThisWeek} accent="bg-amber-500"  icon={<CalendarDays size={16} />} />
+        </div>
+
+        {/* Toolbar */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {/* Tabs */}
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white/70 p-1 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
+            {TAB_KEYS.map((key) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  activeTab === key
+                    ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {TAB_LABELS[key]}
+                <span
+                  className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold tabular-nums ${
+                    activeTab === key
+                      ? "bg-white/25 text-white"
+                      : "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                  }`}
+                >
+                  {counts[key as keyof typeof counts]}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Search + filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <Search size={13} className="shrink-0 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={T.searchPlaceholder}
+                className="w-40 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 sm:w-56"
+              />
+            </div>
+
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as typeof priorityFilter)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
+              <option value="all">{T.priorityAll}</option>
+              <option value="urgent">{T.priorityUrgent}</option>
+              <option value="high">{T.priorityHigh}</option>
+              <option value="medium">{T.priorityMedium}</option>
+              <option value="low">{T.priorityLow}</option>
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
+              <option value="default">{T.sortDefault}</option>
+              <option value="dueDate">{T.sortDueDate}</option>
+              <option value="priority">{T.sortPriority}</option>
+              <option value="updatedAt">{T.sortUpdated}</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setMyOnly((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition ${
+                myOnly
+                  ? "border-sky-500/50 bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+              }`}
+            >
+              <User size={13} />
+              {T.myTasksOnly}
+            </button>
+          </div>
+        </div>
+
+        {/* Project groups */}
+        <div className="space-y-4">
+          {projectGroups.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white/50 p-12 text-center text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-900/50">
+              {T.noTasks}
+            </div>
+          )}
+
+          {projectGroups.map((group) => {
+            const collapsed = collapsedProjects.has(group.id);
+            return (
+              <section
+                key={group.id}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70"
+              >
+                <header
+                  className="flex cursor-pointer items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-l from-slate-50/80 to-transparent px-4 py-2.5 dark:border-slate-800 dark:from-slate-800/40"
+                  onClick={() => toggleProject(group.id)}
+                >
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="grid h-5 w-5 place-items-center rounded text-slate-400 hover:bg-slate-200/50 hover:text-slate-700 dark:hover:bg-slate-700/50"
+                      aria-label="הסתר/הצג פרויקט"
+                    >
+                      {collapsed ? <ChevronRight size={14} className="rtl:rotate-180" /> : <ChevronDown size={14} />}
+                    </button>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                      {group.name}
+                    </h3>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                      {group.tasks.length}
+                    </span>
+                  </div>
+                </header>
+
+                {!collapsed && (
+                  <div>
+                    {group.tasks.map((task) => {
+                      const sub = getSubInfo(task.id);
+                      return (
+                        <div key={task.id}>
+                          <TaskRow
+                            task={task}
+                            subCount={sub.count}
+                            doneSubCount={sub.done}
+                            isExpanded={expanded.has(task.id)}
+                            onToggleExpand={() => toggleExpand(task.id)}
+                            onToggleStatus={() => toggleStatus(task.id)}
+                            onSelect={() => setSelectedId(task.id)}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            isBeingDragged={draggedId === task.id}
+                          />
+
+                          {/* Inline subtasks */}
+                          {expanded.has(task.id) && sub.count > 0 && (
+                            <ul className="border-b border-slate-100 bg-slate-50/60 dark:border-slate-800/60 dark:bg-slate-800/30">
+                              {tasks
+                                .filter((s) => s.parentId === task.id)
+                                .map((s) => (
+                                  <li
+                                    key={s.id}
+                                    className="flex cursor-pointer items-center gap-3 px-12 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                                    onClick={() => setSelectedId(s.id)}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={s.status === "done"}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleStatus(s.id);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="h-3.5 w-3.5 cursor-pointer rounded accent-emerald-500"
+                                    />
+                                    <span
+                                      className={
+                                        s.status === "done"
+                                          ? "flex-1 text-slate-400 line-through"
+                                          : "flex-1 text-slate-700 dark:text-slate-200"
+                                      }
+                                    >
+                                      {s.title}
+                                    </span>
+                                    <AssigneeAvatar name={s.assigneeName} size={20} />
+                                  </li>
+                                ))}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Slide-over */}
+      <SlideOver
+        task={selectedTask}
+        subtasks={selectedSubtasks}
+        notes={selectedNotes}
+        members={members}
+        onClose={() => setSelectedId(null)}
+        onPatch={(patch) => selectedId && patchTask(selectedId, patch)}
+        onDelete={() => selectedId && deleteTask(selectedId)}
+        onAddSubtask={(title) => selectedId && addSubtask(selectedId, title)}
+        onToggleSubtask={(subId) => toggleStatus(subId)}
+        onAddNote={(content, isPrivate) =>
+          selectedId && addNote(selectedId, content, isPrivate)
+        }
+      />
+    </div>
+  );
+}
